@@ -13,6 +13,7 @@ from core.schemas import SimmiConfig
 from core.agent import SimmiAgent
 from core.logger import setup_logging, get_logger
 from integrations.telegram import TelegramInterface
+from integrations.whatsapp import WhatsAppInterface
 from scheduler.manager import TaskScheduler
 
 # Initialize structured logging
@@ -93,15 +94,27 @@ async def bootstrap():
         scheduler.start()
         logger.info("scheduler_started")
 
-        # 5. Starting Telegram Bot
-        status.update("[bold white]Starting Telegram Bot...[/bold white]")
+        # 5. Starting Interfaces
+        status.update("[bold white]Initializing Communication Channels...[/bold white]")
+        
+        # Telegram
         telegram_bot = TelegramInterface(config, agent)
         await telegram_bot.start()
         logger.info("telegram_bot_initialized")
 
+        # WhatsApp (Baileys)
+        if config.whatsapp.enabled:
+            status.update("[bold white]Starting WhatsApp Bridge...[/bold white]")
+            whatsapp_bot = WhatsAppInterface(config, agent)
+            await whatsapp_bot.start()
+            logger.info("whatsapp_interface_initialized")
+
         status.stop()
         console.print(f"✅ [bold green]System Fully Operational![/bold green]")
-        console.print(f"🤖 [cyan]{config.personality.name}[/cyan] is now listening on Telegram.\n")
+        console.print(f"🤖 [cyan]{config.personality.name}[/cyan] is now listening on Telegram.")
+        if config.whatsapp.enabled:
+            console.print(f"📱 WhatsApp Bridge is active. Scan QR code in terminal if needed.")
+        console.print("")
         
         # Keep the loop running
         while True:

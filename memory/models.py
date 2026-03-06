@@ -12,7 +12,7 @@ class MemoryEntry(Base):
     user_id = Column(BigInteger, index=True)
     type = Column(String(50)) # conversation, fact, tool_result
     content = Column(Text)
-    embedding = Column(Vector(768)) # Default for Gemini embeddings, change if using OpenAI
+    embedding = Column(Vector(3072)) # Gemini/Modern dimensions
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 class TaskEntry(Base):
@@ -33,7 +33,7 @@ class PatternEntry(Base):
     name = Column(String(100))
     description = Column(Text)
     code_pattern = Column(Text)
-    embedding = Column(Vector(768)) # Gemini Default
+    embedding = Column(Vector(3072)) # Gemini Default
     success_count = Column(Integer, default=1)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
@@ -55,7 +55,7 @@ class ExperienceEntry(Base):
     approach = Column(Text)
     result = Column(Text)
     status = Column(String(20)) # success, failure
-    embedding = Column(Vector(768))
+    embedding = Column(Vector(3072))
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 class ReflectionEntry(Base):
