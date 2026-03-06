@@ -7,7 +7,7 @@ from core.logger import get_logger
 from memory.manager import MemoryManager
 from core.schemas import SimmiConfig
 from tools.base import ToolRegistry, ToolResult
-from tools.core_tools import FileWriter, CodeGenerator
+from tools.core_tools import FileWriter, CodeGenerator, DockerSandbox
 from core.orchestrator.manager import AgentOrchestrator
 
 logger = get_logger("agent_core")
@@ -23,6 +23,7 @@ class SimmiAgent:
         self.registry = ToolRegistry()
         self.registry.register(FileWriter())
         self.registry.register(CodeGenerator())
+        self.registry.register(DockerSandbox())
         
         # Orchestrator
         self.orchestrator = AgentOrchestrator(self.llm, self.memory)
@@ -61,7 +62,7 @@ AVAILABLE TOOLS:
 ...
 """
 
-    async def handle_message(self, user_id: int, message: str) -> str:
+    async def handle_message(self, user_id: Any, message: str) -> str:
         log = logger.bind(user_id=user_id)
         
         # Check for complex goal triggers

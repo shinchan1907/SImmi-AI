@@ -9,7 +9,7 @@ class MemoryEntry(Base):
     __tablename__ = "memories"
     
     id = Column(Integer, primary_key=True)
-    user_id = Column(BigInteger, index=True)
+    user_id = Column(String(100), index=True)
     type = Column(String(50)) # conversation, fact, tool_result
     content = Column(Text)
     embedding = Column(Vector(3072)) # Gemini/Modern dimensions

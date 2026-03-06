@@ -23,19 +23,19 @@ class MemoryManager:
             await conn.run_sync(Base.metadata.create_all)
 
     # --- Short Term Memory (Redis) ---
-    async def add_chat_history(self, user_id: int, role: str, content: str, limit: int = 10):
+    async def add_chat_history(self, user_id: str, role: str, content: str, limit: int = 10):
         key = f"chat_history:{user_id}"
         message = json.dumps({"role": role, "content": content})
         await self.redis.lpush(key, message)
         await self.redis.ltrim(key, 0, limit - 1)
 
-    async def get_chat_history(self, user_id: int) -> List[dict]:
+    async def get_chat_history(self, user_id: str) -> List[dict]:
         key = f"chat_history:{user_id}"
         messages = await self.redis.lrange(key, 0, -1)
         return [json.loads(m) for m in reversed(messages)]
 
     # --- Long Term Memory (PostgreSQL + pgvector) ---
-    async def store_memory(self, user_id: int, content: str, embedding: List[float], mem_type: str = "conversation"):
+    async def store_memory(self, user_id: str, content: str, embedding: List[float], mem_type: str = "conversation"):
         async with self.async_session() as session:
             entry = MemoryEntry(
                 user_id=user_id,
@@ -46,7 +46,7 @@ class MemoryManager:
             session.add(entry)
             await session.commit()
 
-    async def search_memory(self, user_id: int, query_embedding: List[float], limit: int = 5):
+    async def search_memory(self, user_id: str, query_embedding: List[float], limit: int = 5):
         async with self.async_session() as session:
             stmt = select(MemoryEntry).where(MemoryEntry.user_id == user_id).order_by(
                 MemoryEntry.embedding.l2_distance(query_embedding)

@@ -57,8 +57,29 @@ async def check_api_server() -> Dict[str, Any]:
             response = await client.get("http://localhost:8000/health", timeout=1.0)
             if response.status_code == 200:
                 return {"status": "ok", "message": "Operational"}
+        return {"status": "warning", "message": "FastAPI Health Check Failed"}
     except:
         return {"status": "warning", "message": "Not running (start with 'simmi start')"}
+
+async def check_whatsapp() -> Dict[str, Any]:
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://localhost:3000/status", timeout=1.0)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("connected"):
+                    return {"status": "ok", "message": f"Linked: {data.get('number')}"}
+                return {"status": "warning", "message": "Bridge up but NOT linked"}
+        return {"status": "error", "message": "Bridge error"}
+    except:
+        return {"status": "error", "message": "Bridge not responding"}
+
+async def check_voice(config: dict) -> Dict[str, Any]:
+    if not config.get("voice", {}).get("enabled"):
+        return {"status": "error", "message": "Disabled"}
+    if config.get("voice", {}).get("elevenlabs_api_key"):
+        return {"status": "ok", "message": "Ready (ElevenLabs)"}
+    return {"status": "warning", "message": "Enabled but NO API KEY"}
 
 async def run_diagnostics() -> Dict[str, Any]:
     config_path = Path("config/config.yaml")
@@ -76,6 +97,8 @@ async def run_diagnostics() -> Dict[str, Any]:
     results["PostgreSQL"] = await check_postgres(config["database"]["url"])
     results["Redis"] = await check_redis(config["database"]["redis_url"])
     results["Telegram"] = await check_telegram(config["telegram"]["bot_token"])
+    results["WhatsApp"] = await check_whatsapp()
+    results["Voice"] = await check_voice(config)
     results["Docker"] = check_docker()
     results["API Server"] = await check_api_server()
     

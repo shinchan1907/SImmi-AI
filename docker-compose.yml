@@ -1,19 +1,42 @@
 version: '3.8'
 
 services:
-  agent:
+  simmi-agent:
     build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "8001:8001"
     volumes:
       - ./config:/app/config
       - ./storage:/app/storage
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock # For sandbox
     depends_on:
       - postgres
       - redis
-    env_file: .env
+      - whatsapp-bridge
+    environment:
+      - WHATSAPP_BRIDGE_URL=http://whatsapp-bridge:3000
+      # PostgreSQL config should match
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/simmiadb
+      - REDIS_URL=redis://redis:6379/0
+    command: simmi start --no-background
+
+  whatsapp-bridge:
+    build: ./whatsapp_bridge
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./whatsapp_bridge/auth_info_baileys:/app/auth_info_baileys
+      - ./storage:/app/storage # Shared storage for media
+    environment:
+      - BACKEND_URL=http://simmi-agent:8001/whatsapp/webhook
 
   postgres:
     image: ankane/pgvector:latest
+    restart: unless-stopped
     environment:
       POSTGRES_DB: simmiadb
       POSTGRES_USER: postgres
@@ -25,6 +48,7 @@ services:
 
   redis:
     image: redis:latest
+    restart: unless-stopped
     ports:
       - "6379:6379"
 

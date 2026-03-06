@@ -42,12 +42,19 @@ class SimmiSupervisor:
 
     async def notify_owner(self, message: str):
         """Send a message to the owner via Telegram."""
-        if not self.telegram or not self.config:
+        if not self.config:
             return
+        
+        from telegram import Bot
+        from core.security import decrypt_key
+        
+        token = decrypt_key(self.config.telegram.bot_token)
+        bot = Bot(token=token)
         
         for user_id in self.config.telegram.allowed_user_ids:
             try:
-                await self.telegram.bot.send_message(chat_id=user_id, text=f"⚠️ [SIMMI SUPERVISOR]\n{message}")
+                # Use a new event loop or the current one
+                await bot.send_message(chat_id=user_id, text=f"⚠️ [SIMMI SUPERVISOR]\n{message}")
             except Exception as e:
                 logger.error("notify_failed", error=str(e))
 

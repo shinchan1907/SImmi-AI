@@ -13,6 +13,8 @@ core/llm.py
 core/logger.py
 core/schemas.py
 core/security.py
+core/supervisor.py
+core/voice.py
 core/agents/base.py
 core/agents/specialized.py
 core/evolution/prompt_optimizer.py
@@ -27,6 +29,7 @@ integrations/__init__.py
 integrations/speech_to_text.py
 integrations/telegram.py
 integrations/tts_elevenlabs.py
+integrations/whatsapp.py
 memory/__init__.py
 memory/manager.py
 memory/models.py

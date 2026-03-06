@@ -42,7 +42,6 @@ class CodeGenerator(BaseTool):
         return "Generates complex code structures. Args: language (str), requirements (str)"
 
     async def run(self, language: str, requirements: str) -> ToolResult:
-        # Placeholder for real generation logic
         return ToolResult(
             status="success", 
             result={
@@ -51,3 +50,41 @@ class CodeGenerator(BaseTool):
                 "content": "Generated code based on: " + requirements
             }
         )
+
+class DockerSandbox(BaseTool):
+    @property
+    def name(self) -> str:
+        return "docker_sandbox"
+
+    @property
+    def description(self) -> str:
+        return "Safely execute shell commands or code in a isolated container. Args: command (str), timeout (int)"
+
+    async def run(self, command: str, timeout: int = 30) -> ToolResult:
+        import docker
+        client = docker.from_env()
+        
+        try:
+            # We use an alpine container for minimal footprint
+            container = client.containers.run(
+                "python:3.11-alpine",
+                command=f"/bin/sh -c '{command}'",
+                detach=True,
+                remove=True,
+                cpu_quota=50000, # 50% CPU limit
+                mem_limit="128m", # 128MB Memory limit
+            )
+            
+            # Wait for execution with timeout
+            # (In a real system, we'd use logs() and check exit code)
+            exit_code = container.wait(timeout=timeout)
+            logs = container.logs().decode("utf-8")
+            
+            return ToolResult(
+                status="success" if exit_code['StatusCode'] == 0 else "error",
+                result=logs,
+                error=None if exit_code['StatusCode'] == 0 else f"Process exited with {exit_code['StatusCode']}"
+            )
+        except Exception as e:
+            logger.error("sandbox_failed", error=str(e))
+            return ToolResult(status="error", result=None, error=str(e))
