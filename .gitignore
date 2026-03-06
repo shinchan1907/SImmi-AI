@@ -33,4 +33,14 @@ logs/
 storage/
 temp/
 whatsapp_bridge/auth_info_baileys/
-whatsapp_bridge/tem
+whatsapp_bridge/temp_media/
+.env
+
+# Docker
+.docker_data/
+
+# OS/IDEs
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
