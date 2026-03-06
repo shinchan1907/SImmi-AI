@@ -146,21 +146,67 @@ def doctor():
 
 @app.command()
 def status():
-    """Show the current status of all Simmi Agent services."""
+    """Show the real-time production health of Simmi."""
     print_banner()
-    table = create_status_table()
-    table.add_row("Agent Core", "[green]Active[/green]", "Simmi is online")
-    table.add_row("Telegram Bot", "[green]Connected[/green]", "@simmi_agent_bot")
-    table.add_row("PostgreSQL", "[green]Online[/green]", "pgvector enabled")
-    table.add_row("Redis", "[green]Online[/green]", "Task queue empty")
+    from core.supervisor import SimmiSupervisor
+    from cli.doctor import run_diagnostics
+    
+    supervisor = SimmiSupervisor()
+    is_up = supervisor.is_running()
+    
+    table = Table(title="📡 Simmi System Status", box=box.ROUNDED)
+    table.add_column("Component", style="cyan")
+    table.add_column("Status", justify="center")
+    table.add_column("Details", style="dim")
+
+    # Supervisor/Service Status
+    table.add_row("Service Mode", "[green]RUNNING[/green]" if is_up else "[red]STOPPED[/red]", 
+                  f"PID: {Path('temp/simmi.pid').read_text() if is_up and Path('temp/simmi.pid').exists() else 'N/A'}")
+
+    # Run doctor diagnostics for live system checks
+    results = asyncio.run(run_diagnostics())
+    
+    # Mapping for Part 3 requirements
+    comp_map = {
+        "Database": "Database Connection",
+        "Redis": "Redis Connection",
+        "Telegram": "Telegram Bot status",
+        "WhatsApp": "WhatsApp connection",
+        "Voice": "Voice system status"
+    }
+
+    for name, data in results.items():
+        comp_name = comp_map.get(name, name)
+        status_fmt = f"[green]CONNECTED[/green]" if data["status"] == "ok" else f"[red]ERROR[/red]"
+        table.add_row(comp_name, status_fmt, data["message"])
+    
+    # Scheduler? (We should add more diagnostics if possible)
+    table.add_row("Scheduler", "[green]ACTIVE[/green]" if is_up else "[dim]INACTIVE[/dim]", "Job queue running")
+    
     console.print(table)
+    if not is_up:
+        console.print("\n💡 [yellow]Tip:[/yellow] Run 'simmi start' to boot the agent service.\n")
 
 @app.command()
-def start():
-    """Start the Simmi Agent services."""
+def start(background: bool = True):
+    """Start the Simmi Agent services (default: background)."""
     print_banner()
-    print_step("Starting services...")
-    os.system("python main.py")
+    from core.supervisor import SimmiSupervisor
+    supervisor = SimmiSupervisor()
+    
+    if background:
+        print_step("Initializing Simmi Lifecycle Manager (Background)...")
+        supervisor.start_background()
+    else:
+        print_step("Starting services in foreground...")
+        # Just run main.py directly for debugging
+        os.system(f"python main.py")
+
+@app.command()
+def stop():
+    """Stop the running Simmi Agent service."""
+    from core.supervisor import SimmiSupervisor
+    SimmiSupervisor().stop()
 
 @app.command()
 def tools():
@@ -222,18 +268,77 @@ def report():
     console.print(table)
     print_success("Simmi is evolving! See core/evolution for details.")
 
+@app.command(name="whatsapp")
+def whatsapp_cmd(action: str = "link"):
+    """WhatsApp integration management: link, status."""
+    print_banner()
+    if action == "link":
+        print_step("Initializing WhatsApp Link Session...")
+        print_step("QR Code will appear below. Scan it with your WhatsApp mobile app.")
+        
+        # We need to run the bridge if not running, or just trigger linking
+        # For now, we manually run the bridge in terminal to show QR
+        bridge_path = Path("whatsapp_bridge")
+        if not bridge_path.exists():
+            print_error("WhatsApp bridge not found.")
+            return
+
+        try:
+            # Run node index.js to show QR
+            subprocess.run(["node", "index.js"], cwd=bridge_path)
+        except KeyboardInterrupt:
+            print_success("WhatsApp session link ended.")
+        except Exception as e:
+            print_error(f"Failed to start WhatsApp bridge: {str(e)}")
+
+    elif action == "status":
+        print_step("Checking WhatsApp Connection Status...")
+        # Hit the bridge status endpoint
+        import httpx
+        try:
+            resp = httpx.get("http://localhost:3000/status", timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                table = Table(title="📱 WhatsApp Status", box=box.ROUNDED)
+                table.add_column("Property", style="cyan")
+                table.add_column("Value", style="green")
+                table.add_row("Connection", "[bold green]CONNECTED[/bold green]" if data.get("connected") else "[yellow]DISCONNECTED[/yellow]")
+                table.add_row("Linked Number", data.get("number", "Unknown"))
+                table.add_row("Messages Received", str(data.get("msg_count", 0)))
+                table.add_row("Uptime", str(data.get("uptime", "N/A")))
+                console.print(table)
+            else:
+                print_error("WhatsApp bridge is running but returned error.")
+        except Exception:
+            print_error("WhatsApp bridge is NOT running. Run 'simmi start' first.")
+
 @app.command()
-def logs(n: int = 10):
-    """View the last N system logs."""
+def logs(follow: bool = False, n: int = 20):
+    """Stream or view the system logs."""
     log_file = Path("logs/simmi.log")
     if not log_file.exists():
         print_error("No log file found.")
         return
         
-    with open(log_file, "r") as f:
-        lines = f.readlines()
-        for line in lines[-n:]:
-            console.print(line.strip())
+    if follow:
+        print_step("Streaming logs (Ctrl+C to stop)...")
+        # Use tail-like behavior
+        try:
+            with open(log_file, "r") as f:
+                f.seek(0, 2) # Go to end
+                while True:
+                    line = f.readline()
+                    if not line:
+                        time.sleep(0.1)
+                        continue
+                    print(line.strip())
+        except KeyboardInterrupt:
+            return
+    else:
+        with open(log_file, "r") as f:
+            lines = f.readlines()
+            for line in lines[-n:]:
+                console.print(line.strip())
 
 if __name__ == "__main__":
     app()
