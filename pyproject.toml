@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simmi-agent"
+version = "0.1.0"
+description = "A production-grade autonomous AI agent framework"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "python-telegram-bot",
+    "sqlalchemy[asyncio]",
+    "asyncpg",
+    "pgvector",
+    "redis",
+    "apscheduler",
+    "pydantic",
+    "pydantic-settings",
+    "google-genai",
+    "openai",
+    "typer",
+    "pyyaml",
+    "httpx",
+    "docker",
+    "structlog",
+    "rich",
+    "questionary",
+    "halo",
+    "pydub"
+]
+
+[project.scripts]
+simmi = "cli.main:app"
+
+[tool.setuptools.packages.find]
+include = ["cli*", "core*", "memory*", "tools*", "integrations*", "scheduler*", "execution*", "api*"]
+exclude = ["logs*", "temp*", "storage*", "config*", "tests*"]

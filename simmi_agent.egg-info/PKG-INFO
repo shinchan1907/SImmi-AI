@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: simmi-agent
+Version: 0.1.0
+Summary: A production-grade autonomous AI agent framework
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: python-telegram-bot
+Requires-Dist: sqlalchemy[asyncio]
+Requires-Dist: asyncpg
+Requires-Dist: pgvector
+Requires-Dist: redis
+Requires-Dist: apscheduler
+Requires-Dist: pydantic
+Requires-Dist: pydantic-settings
+Requires-Dist: google-genai
+Requires-Dist: openai
+Requires-Dist: typer
+Requires-Dist: pyyaml
+Requires-Dist: httpx
+Requires-Dist: docker
+Requires-Dist: structlog
+Requires-Dist: rich
+Requires-Dist: questionary
+Requires-Dist: halo
+Requires-Dist: pydub

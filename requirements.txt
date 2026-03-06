@@ -1,0 +1,40 @@
+# Core
+fastapi==0.109.0
+uvicorn==0.27.0
+sqlalchemy[asyncio]==2.0.25
+asyncpg==0.29.0
+pgvector==0.2.4
+redis==5.0.1
+apscheduler==3.10.4
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Integrations
+python-telegram-bot==20.7
+PyGithub==2.1.1
+google-genai
+openai==1.10.0
+httpx==0.26.0
+docker==7.0.0
+
+# CLI & UI
+rich==13.7.0
+questionary==2.0.1
+pyfiglet==1.0.2
+halo==0.0.31
+alive-progress==3.1.5
+typer==0.9.0
+
+# Logging & Security
+structlog==24.1.0
+python-jose[cryptography]==3.3.0
+cryptography==42.0.2
+bcrypt==4.1.2
+python-multipart==0.0.6
+
+# Audio
+pydub==0.25.1
+
+# Utilities
+pyyaml==6.0.1
+python-dotenv==1.0.1
