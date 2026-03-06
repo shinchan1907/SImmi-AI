@@ -96,14 +96,16 @@ async def bootstrap():
         # 5. Starting Telegram Bot
         status.update("[bold white]Starting Telegram Bot...[/bold white]")
         telegram_bot = TelegramInterface(config, agent)
+        await telegram_bot.start()
         logger.info("telegram_bot_initialized")
 
         status.stop()
         console.print(f"✅ [bold green]System Fully Operational![/bold green]")
         console.print(f"🤖 [cyan]{config.personality.name}[/cyan] is now listening on Telegram.\n")
         
-        # Run Telegram Bot (blocking)
-        telegram_bot.run()
+        # Keep the loop running
+        while True:
+            await asyncio.sleep(3600)
 
 if __name__ == "__main__":
     try:
@@ -111,4 +113,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("system_shutdown_initiated")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         logger.critical("system_crash", error=str(e))

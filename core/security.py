@@ -21,16 +21,16 @@ class SecurityManager:
     def encrypt(self, data: str) -> str:
         if not data:
             return ""
-        return self.cipher_suite.encrypt(data.encode()).decode()
+        return self.cipher_suite.encrypt(data.encode()).decode().strip()
 
     def decrypt(self, encrypted_data: str) -> str:
         if not encrypted_data:
             return ""
         try:
-            return self.cipher_suite.decrypt(encrypted_data.encode()).decode()
+            return self.cipher_suite.decrypt(encrypted_data.encode()).decode().strip()
         except Exception:
             # If decryption fails, it might be plain text (for migration or invalid keys)
-            return encrypted_data
+            return encrypted_data.strip()
 
 # Singleton instance
 security_manager = SecurityManager()

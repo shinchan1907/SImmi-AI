@@ -17,9 +17,9 @@ class MemoryManager:
         self.redis = redis.from_url(redis_url, decode_responses=True)
 
     async def init_db(self):
+        from sqlalchemy import text
         async with self.engine.begin() as conn:
-            # Note: Ensure pgvector extension is installed in posters manually or via script
-            # await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
             await conn.run_sync(Base.metadata.create_all)
 
     # --- Short Term Memory (Redis) ---

@@ -190,6 +190,9 @@ Commands:
         mem_text = "\n".join([f"- {m.content} ({m.timestamp.strftime('%Y-%m-%d')})" for m in mems])
         await update.message.reply_text(f"🧠 *Realled Context:*\n{mem_text}", parse_mode='Markdown')
 
-    def run(self):
-        logger.info("telegram_bot_loop_started")
-        self.application.run_polling()
+    async def start(self):
+        logger.info("telegram_bot_starting")
+        await self.application.initialize()
+        await self.application.start()
+        await self.application.updater.start_polling()
+        logger.info("telegram_bot_polling")

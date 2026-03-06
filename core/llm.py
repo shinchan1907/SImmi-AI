@@ -15,7 +15,7 @@ class LLMClient:
         
         if provider == "gemini":
             self.client = genai.Client(api_key=self.api_key)
-            self.model_name = 'gemini-2.0-flash' # Using a modern default
+            self.model_name = 'gemini-2.0-flash'
         elif provider == "openai":
             self.client = OpenAI(api_key=self.api_key)
             self.model_name = "gpt-4-turbo-preview"
@@ -73,7 +73,7 @@ class LLMClient:
         try:
             if self.provider == "gemini":
                 response = self.client.models.embed_content(
-                    model="text-embedding-004",
+                    model="models/gemini-embedding-001",
                     contents=[text]
                 )
                 return response.embeddings[0].values
